@@ -1,0 +1,31 @@
+Create BIDS formated event files for the oddball task run 05/07/2019
+- Tone/No Tone oddball - response made for every tone
+- 200 trials
+- AF was subject
+
+```{r}
+#Load data from session
+bdat = read.csv('/Users/alsfilip/Dropbox/Penn/fMRI_LC_Pupil/Tone_Oddball_Task/data/AF_ses-06_run-02_20190507_fmri_ToneTask_stim_Tue_May__7_13:31:10_2019.csv',sep=',',stringsAsFactors = F)
+
+#Make 4 columns
+ev_file = data.frame(onset=double(),duration=double(),trial_type=character(),response_time=double(),stringsAsFactors=F)
+
+#Scrape file and format appropriately
+for(i in 1:length(bdat$SubjectID)){
+  new_row = data.frame(onset=double(),duration=double(),trial_type=character(),response_time=double(),stringsAsFactors=F)
+  if(bdat$Event[i] %in% c('ITI','CrossOn','CrossRotate','Silence')){
+    new_row[1,] = c(bdat$TimeFromStart[i],2,bdat$Event[i],'n/a')
+    ev_file = rbind(ev_file,new_row)
+  }
+  else if(bdat$Event[i] == 'Oddball'){
+    respTime = ifelse(bdat$Event[i+1] == 'ResponseMade',bdat$TimeFromStart[i+1]-bdat$TimeFromStart[i],'n/a')
+    new_row[1,] = c(bdat$TimeFromStart[i],.5,bdat$Event[i],respTime)
+    ev_file = rbind(ev_file,new_row)
+  }
+}
+
+#Save as .tsv for BIDS with no row index number
+write.table(ev_file,"/Users/alsfilip/Dropbox/Penn/fMRI_LC_Pupil/Tone_Oddball_Task/EVs/sub-01_ses-06_task-AuditoryOddball_events.tsv",sep = '\t',row.names = F,col.names = T)
+
+```
+
